@@ -11,7 +11,7 @@ Well okay then, let's look at that in further detail.
 
 ## Introduction
 
-* PSO is a optimization algorithm (typically for simulations with complex outcomes) which is considered an evolutionary algorithm.
+* PSO is an optimization algorithm (typically for simulations with complex outcomes) which is considered an evolutionary algorithm.
 * Inspired by social behaviour of bird flocking and fish schools.
 * Fitness function for each.
 * If there are a large number of particles, this means every iteration a large number of fitness evaluations must be made.
@@ -67,12 +67,25 @@ Well okay then, let's look at that in further detail.
 
 ## Analysis of Multiple control factors
 
+It's good that they have gone to the effort of analysising how the other paramters/factors effect computation across the implementations.
+
 * Control factors are: Number of particles (n), dimension (d), thread block-size (s)
 * Can go into detail how each factor effects speedup. And which has greatest impact.
+* Particle numeber n has a significant impact on speed-up. (Obviously, but shown here)
+* Followed by design dimensions, this is the number of parallel rows of particles processed in parallel.
+* Followed by the interaction between n and d. (How further parallelism is effective with more particles) It can be concluded the higher number of particles, and higher number of dimensions to process in parallel, further speed-up in GPU implementation.
+* Block size s has little effect on the speed-up ratio. And all interactions with S n*s, d*s, n*s*d are very small.
 
 ## Trajectory Optimization
 
+Trajectory optimization in relation to aircrafts is a optimal control problem. It is usually solved using direct, mathematical methods. Like the numerical direct shooting method[1].
+PSO can be applied to this as there are multiple nodes with which the values can be parameterized and optimized. It might be possible to use the GPU accelerated method to reduce computational time during the aircraft flights.
 
+There is a lot of explaination of control parameters, constant values like number of particles being 10,000! etc
+And apparently all methods arrive at almost the same optimal solution. However, the full GPU implementation does it in 9s, the partial in 20s and the CPU in 1464s.
+Full GPU has a huge factor increase of speed-up 161! Showing this really is a problem that suits/fits SIMD processing. Partial still has speedup over CPU, showing the overhead from copying between is CPU and GPU is smaller than gain from using GPU. CPU slow, but is running in serial...
+
+There is a follow up paragraph validating accuracy of "optimal" result and it is considered good.
 
 ## Personal Reflection
 
@@ -84,3 +97,9 @@ Well okay then, let's look at that in further detail.
 * Highlight important aspects to consider when programming for SIMD. Cache alingment. Using the right memory (local, private, global, buffer)
 * A really good thing they did is by using four different PSO algorithms in each method. Time analysis of each and comparing.
 * Not only do they parallelize the fitness function evaluation. But the initalization and 
+* It is good they demonstrate the overhead for copying data between CPU and GPU in the partial method. Showing that performance gained from the use of a GPU can really be missed out on if done incorrectly.
+
+* For a more fair comparison, parallel CPU implementation. Could use a shared memory parallelization, using OpenMP. This Would even have the advantage of allowing different instructions being execute on multiple data MIMD.
+* The best comparison I think would be to use a CPU with SIMD processors. Then either using compiler Instrisincs or a SIMD intrisicss wrapper class(libsimdpp) to process vectorized agents as the data.
+
+[1]Kiehl, Martin (1994). "Parallel multiple shooting for the solution of initial value problems". Parallel Computing. Elsevier. 20 (3): 275–295. doi:10.1016/S0167-8191(06)80013-X. Retrieved November 9, 2016.
